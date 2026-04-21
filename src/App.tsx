@@ -367,8 +367,10 @@ export default function App() {
       <nav className="border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Youtube className="w-6 h-6 text-red-600" />
-            <span className="font-semibold text-white tracking-tight text-lg">Downloader Pro</span>
+            <div className="bg-red-600 p-1.5 rounded-lg">
+              <Download className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-white tracking-tight text-xl">YouDownloader<span className="text-red-500">03</span></span>
           </div>
           <button 
             onClick={() => setHistoryOpen(true)}
@@ -790,6 +792,16 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 10px; }
       `}</style>
+      
+      <footer className="max-w-5xl mx-auto px-4 py-12 border-t border-neutral-900 mt-12 text-center">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="bg-neutral-800 p-1 rounded-md">
+            <Download className="w-4 h-4 text-neutral-400" />
+          </div>
+          <span className="font-bold text-neutral-400 tracking-tight text-sm">YouDownloader<span className="text-red-500/50">03</span></span>
+        </div>
+        <p className="text-neutral-600 text-[10px] uppercase tracking-[0.2em]">© {new Date().getFullYear()} YouDownloader03 • High Performance Media Utility</p>
+      </footer>
     </div>
   );
 }
