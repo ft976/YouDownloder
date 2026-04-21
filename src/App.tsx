@@ -397,7 +397,7 @@ export default function App() {
             >
               <div className="flex gap-4 p-4 rounded-xl bg-[#151515] border border-[#222]">
                 <img 
-                  src={quickPreviewData.thumbnail_url} 
+                  src={quickPreviewData.thumbnail_url || null} 
                   alt="Thumbnail" 
                   className="w-24 h-16 rounded-md object-cover brightness-90 border border-[#333]" 
                   referrerPolicy="no-referrer"
@@ -483,7 +483,7 @@ export default function App() {
               {/* Media Preview */}
               <div className="lg:col-span-1 space-y-4">
                 <div className="aspect-video bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 relative group">
-                  <img src={videoInfo.thumbnail} alt={videoInfo.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                  <img src={videoInfo.thumbnail || null} alt={videoInfo.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
                   <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-md">
                     {formatDuration(videoInfo.lengthSeconds)}
                   </div>
@@ -524,7 +524,7 @@ export default function App() {
                 <div className="absolute top-0 right-0 p-32 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6 relative z-10 w-full md:w-auto">
                   <div className="shrink-0 relative group">
-                    <img src={playlistInfo.thumbnail} alt="Playlist" className="w-full max-w-[200px] sm:w-40 aspect-video object-cover rounded-xl border border-neutral-800 shadow-xl" />
+                    <img src={playlistInfo.thumbnail || null} alt="Playlist" className="w-full max-w-[200px] sm:w-40 aspect-video object-cover rounded-xl border border-neutral-800 shadow-xl" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
                       <ListVideo className="w-8 h-8 text-white" />
                     </div>
@@ -551,7 +551,7 @@ export default function App() {
                   <div key={`playlist-${item.id}-${index}`} className="bg-neutral-900/40 border border-neutral-800/80 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:bg-neutral-800 transition-all shadow-sm">
                     <div className="text-neutral-500 font-mono text-sm w-6 text-center shrink-0">{index + 1}</div>
                     <div className="relative w-full sm:w-32 aspect-video shrink-0 bg-neutral-950 rounded-lg overflow-hidden border border-neutral-800">
-                      <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={item.thumbnail || null} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-medium text-white backdrop-blur-sm">{item.duration}</div>
                     </div>
                     <div className="flex-1 min-w-0 py-1">
@@ -683,7 +683,7 @@ export default function App() {
                           <div className="w-20 aspect-video bg-neutral-950 rounded-lg overflow-hidden shrink-0 relative">
                             {item.thumbnail ? (
                               <img 
-                        src={item.thumbnail || undefined} 
+                        src={item.thumbnail || null} 
                         alt="" 
                         className="w-full h-full object-cover" 
                         referrerPolicy="no-referrer" 
