@@ -2,6 +2,8 @@ import express from 'express';
 import yt from 'youtube-dl-exec';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import archiver from 'archiver';
+import axios from 'axios';
 
 function formatDuration(sec?: number) {
   if (!sec) return '0:00';
@@ -77,6 +79,50 @@ async function startServer() {
         console.error("Loader Progress Error:", error.message);
         res.status(500).json({ error: "Failed to fetch progress proxy" });
       }
+  });
+
+  // Batch ZIP endpoint
+  app.post('/api/zip', async (req, res) => {
+    const { files, playlistTitle } = req.body; // [{ url, filename }]
+    
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: 'No files provided for zipping' });
+    }
+
+    const safeTitle = (playlistTitle || 'playlist').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    
+    res.writeHead(200, {
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${safeTitle}.zip"`,
+    });
+
+    const archive = archiver('zip', {
+      zlib: { level: 5 } // Optimal balance
+    });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      // We can't really send an error response here because headers are sent
+      res.end();
+    });
+
+    archive.pipe(res);
+
+    for (const file of files) {
+      try {
+        const response = await axios({
+          method: 'get',
+          url: file.url,
+          responseType: 'stream'
+        });
+        archive.append(response.data, { name: file.filename });
+      } catch (err) {
+        console.error(`Failed to download file for zipping: ${file.url}`, err);
+        // Continue with other files
+      }
+    }
+
+    archive.finalize();
   });
 
   // Vite middleware for development

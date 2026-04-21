@@ -61,6 +61,7 @@ interface DownloadTask {
   progress: number;
   statusText: string;
   finalUrl?: string;
+  batchId?: string;
 }
 
 export default function App() {
@@ -79,6 +80,7 @@ export default function App() {
   
   // Managing active downloads
   const [activeTasks, setActiveTasks] = useState<DownloadTask[]>([]);
+  const [zippingBatchId, setZippingBatchId] = useState<string | null>(null);
 
   // History State
   const [history, setHistory] = useState<HistoryItem[]>(() => {
@@ -208,10 +210,10 @@ export default function App() {
   }, [activeTasks]);
 
 
-  const executeDownload = async (downloadUrl: string, format: string, title: string, thumbnail: string) => {
+  const executeDownload = async (downloadUrl: string, format: string, title: string, thumbnail: string, batchId?: string) => {
     const internalId = Math.random().toString(36).substring(7);
     
-    // Add to history
+    // Add to history (only if not a batch item or if you want single items too, user likely wants both)
     const newItem: HistoryItem = {
       id: Date.now().toString() + internalId,
       title: title || 'YouTube Video',
@@ -225,7 +227,7 @@ export default function App() {
 
     // Register active task
     setActiveTasks(prev => [{
-       internalId, url: downloadUrl, title, thumbnail, format, status: 'pending', progress: 0, statusText: 'Requesting...'
+       internalId, url: downloadUrl, title, thumbnail, format, status: 'pending', progress: 0, statusText: 'Requesting...', batchId
     }, ...prev]);
 
     // Request download initiator
@@ -254,17 +256,61 @@ export default function App() {
     executeDownload(url, targetFormat, videoInfo.title, videoInfo.thumbnail);
   };
 
-  const handlePlaylistDownloadItem = (item: PlaylistItem) => {
-    executeDownload(item.url, targetFormat, item.title, item.thumbnail);
+  const handlePlaylistDownloadItem = (item: PlaylistItem, batchId?: string) => {
+    executeDownload(item.url, targetFormat, item.title, item.thumbnail, batchId);
   };
 
   const handleBatchDownload = () => {
     if (!playlistInfo) return;
+    const batchId = 'batch-' + Math.random().toString(36).substring(7);
+    setZippingBatchId(batchId);
+    setHistoryOpen(true);
+
     playlistInfo.items.forEach((item, index) => {
       setTimeout(() => {
-        handlePlaylistDownloadItem(item);
-      }, index * 1000); 
+        handlePlaylistDownloadItem(item, batchId);
+      }, index * 1200); 
     });
+  };
+
+  const handleCreateZip = async (batchTasks: DownloadTask[]) => {
+    if (batchTasks.length === 0) return;
+    
+    const readyFiles = batchTasks
+      .filter(t => t.status === 'finished' && t.finalUrl)
+      .map(t => ({
+        url: t.finalUrl,
+        filename: `${t.title.replace(/[^a-z0-9]/gi, '_')}.${t.format.match(/mp3|m4a|flac|wav/) ? t.format : 'mp4'}`
+      }));
+
+    if (readyFiles.length === 0) return;
+
+    try {
+      const response = await fetch('/api/zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          files: readyFiles, 
+          playlistTitle: playlistInfo?.title || 'youtube_playlist' 
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${playlistInfo?.title || 'playlist'}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        // We don't necessarily clear batch ID here so they can re-download zip if they want
+      } else {
+        alert("Failed to generate ZIP. Some files might be unavailable.");
+      }
+    } catch (err) {
+      alert("Error generating ZIP. Check your connection.");
+    }
   };
 
   const removeHistoryItem = (id: string) => {
@@ -610,9 +656,21 @@ export default function App() {
                 {/* Active Downloads */}
                 {activeTasks.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-2">
-                       Active Downloads <span className="text-[10px] bg-red-950 text-red-400 px-1.5 py-0.5 rounded-full">{activeTasks.length}</span>
-                    </h3>
+                    <div className="flex items-center justify-between">
+                       <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-2">
+                          Active Downloads <span className="text-[10px] bg-red-950 text-red-400 px-1.5 py-0.5 rounded-full">{activeTasks.length}</span>
+                       </h3>
+                       {zippingBatchId && (
+                         <button 
+                           onClick={() => handleCreateZip(activeTasks.filter(t => t.batchId === zippingBatchId))}
+                           disabled={activeTasks.filter(t => t.batchId === zippingBatchId).some(t => t.status !== 'finished')}
+                           className="text-[10px] bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 disabled:opacity-50 disabled:grayscale transition-all"
+                         >
+                           <HardDrive size={12} />
+                           {activeTasks.filter(t => t.batchId === zippingBatchId).every(t => t.status === 'finished') ? 'Download All as ZIP' : 'Preparing ZIP...'}
+                         </button>
+                       )}
+                    </div>
                     <div className="space-y-3">
                       {activeTasks.map(task => (
                         <div key={task.internalId} className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-sm">
