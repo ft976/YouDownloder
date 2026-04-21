@@ -88,4 +88,12 @@ The application uses `localStorage` to manage a "History" of downloads. This sta
 
 ---
 
+## 📜 License & Community
+
+- **License:** Distributed under the [Apache License 2.0](/LICENSE).
+- **Contributing:** Check out our [Contributing Guidelines](/CONTRIBUTING.md).
+- **Conduct:** We follow the [Contributor Covenant Code of Conduct](/CODE_OF_CONDUCT.md).
+- **Security:** Please report vulnerabilities according to our [Security Policy](/SECURITY.md).
+- **Changelog:** See the latest updates in our [Changelog](/CHANGELOG.md).
+
 Built with ❤️ for a better media experience.
